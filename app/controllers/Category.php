@@ -2,48 +2,34 @@
 
 class Category extends Controller
 {
-    private $db;
+    private $service;
+
     public function __construct()
     {
-        $this->model('CategoryModel');
-    
-        $this->db = new Database();
+        require_once __DIR__ . '/../services/CategoryService.php';
+        require_once __DIR__ . '/../repositories/CategoryRepository.php';
+        require_once __DIR__ . '/../contracts/CategoryInterface.php';
+
+        $repo = new CategoryRepository();
+        $this->service = new CategoryService($repo);
     }
 
-    public function index() {
-        $category = $this->db->readAll('vw_categories_type');
-        // print_r($category);
-        $data = [
-            'categories' => $category
-        ];
-        $this->view('category/table', $data);
+    public function index()
+    {
+        $categories = $this->service->list();
+        $this->view('category/table', ['categories' => $categories]);
     }
 
-    public function create() {
-        $types = $this->db->readAll('types');
-        // print_r($types);
-        $data = [
-            'types' => $types,
-            'index' => 'category'
-        ];
-        // print_r($data);
-        $this->view('category/create', $data);
+    public function create()
+    {
+        $types = $this->service->getTypes();
+        $this->view('category/create', ['types' => $types, 'index' => 'category']);
     }
 
-    public function store() {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST')
-        {
-            $name = $_POST['name'];
-            $description = $_POST['description'];
-            $type_id = $_POST['type_id'];
-
-            $category = new CategoryModel();
-
-            $category->setName($name);
-            $category->setDescription($description);
-            $category->setTypeId($type_id);
-
-            $categoryCreated = $this->db->create('categories', $category->toArray());
+    public function store()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->service->create($_POST);
             setMessage('success', 'Create successful!');
             redirect('category');
         }
@@ -51,37 +37,15 @@ class Category extends Controller
 
     public function edit($id)
     {
-        $types = $this->db->readAll('types');
-        // print_r($types);
-
-        $category = $this->db->getById('categories', $id);
-        // print_r($category);
-
-        $data = [
-            'types' => $types,
-            'categories' => $category
-        ];
-
-        $this->view('category/edit', $data);
+        $category = $this->service->find($id);
+        $types = $this->service->getTypes();
+        $this->view('category/edit', ['categories' => $category, 'types' => $types]);
     }
 
     public function update()
     {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $id = $_POST['id'];
-            $name = $_POST['name'];
-            $description = $_POST['description'];
-            $type_id = $_POST['type_id'];
-            // echo $name;
-
-            $category = new CategoryModel();
-            $category->setId($id);
-            $category->setName($name);
-            $category->setDescription($description);
-            $category->setTypeId($type_id);
-
-            $isUpdated = $this->db->update('categories', $category->getId(), $category->toArray());
-            // echo $isUpdated;
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->service->update($_POST);
             setMessage('success', 'Update successful!');
             redirect('category');
         }
@@ -89,12 +53,7 @@ class Category extends Controller
 
     public function destroy($id)
     {
-        $id = base64_decode($id);
-
-        $category = new CategoryModel();
-        $category->setId($id);
-
-        $isdestroy = $this->db->delete('categories', $category->getId());
+        $this->service->delete(base64_decode($id));
         redirect('category');
     }
 }

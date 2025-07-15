@@ -65,19 +65,19 @@ class Auth extends Controller
                     $user->setIsConfirmed(0);
                     $user->setDate(date('Y-m-d H:i:s'));
 
-                    $user->setIsConfirmed(1); //optional   ****** ***************
+                    //$user->setIsConfirmed(1); //optional   ****** ***************
                     $userCreated = $this->db->create('users', $user->toArray());
                     $userCreated="true";
 
                     if ($userCreated) {
                         //Instatiate mail
-                        // $mail = new Mail();
+                        $mail = new Mail();
 
-                        // $verify_token = URLROOT . '/auth/verify/' . $token;
-                        // $mail->verifyMail($email, $name, $verify_token);
+                        $verify_token = URLROOT . '/auth/verify/' . $token;
+                        $mail->verifyMail($email, $name, $verify_token);
 
-                        // setMessage('success', 'Please check your Mail box !');
-                        // redirect('pages/login');
+                        setMessage('success', 'Please check your Mail box !');
+                        redirect('pages/login');
 
                         setMessage(
                             'success',
@@ -114,21 +114,6 @@ class Auth extends Controller
 
         redirect('');
     }
-
-    // public function verify($token)
-    // {
-    //     $user = $this->db->columnFilter('users', 'token', $token);
-
-    //     if ($user) {
-    //         $this->db->update('users', ['is_confirmed' => 1, 'is_active' => 1, 'token' => null], ['id' => $user['id']]);
-    //         setMessage('success', 'Your account has been verified. You can now log in.');
-    //         redirect('pages/login');
-    //     } else {
-    //         setMessage('error', 'Invalid or expired verification token.');
-    //         redirect('pages/login');
-    //     }
-    // }
-
 
     public function login()
     {
